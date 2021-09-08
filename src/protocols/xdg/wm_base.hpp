@@ -1,5 +1,6 @@
 #pragma once
 #include <wl_protocol.hpp>
+#include <x_window.hpp>
 
 namespace protocol::xdg
 {
@@ -9,7 +10,8 @@ namespace protocol::xdg
         int                        version() const noexcept override;
         void*                      functions() const noexcept override;
 
-        void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept override;
+        void bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                  uint32_t id) noexcept override;
         void destory(struct wl_resource* resource) noexcept override;
 
         static void destroy(struct wl_client* client, struct wl_resource* resource);
@@ -25,7 +27,8 @@ namespace protocol::xdg
         int                        version() const noexcept override;
         void*                      functions() const noexcept override;
 
-        void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept override;
+        void bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                  uint32_t id) noexcept override;
         void destory(struct wl_resource* resource) noexcept override;
 
         void create(struct wl_resource* resource, void* data) noexcept override;
@@ -45,7 +48,8 @@ namespace protocol::xdg
         int                        version() const noexcept override;
         void*                      functions() const noexcept override;
 
-        void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept override;
+        void bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                  uint32_t id) noexcept override;
         void destory(struct wl_resource* resource) noexcept override;
 
         void create(struct wl_resource* resource, void* data) noexcept override;

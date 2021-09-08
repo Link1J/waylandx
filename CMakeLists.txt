@@ -9,6 +9,7 @@ set(SOURCES
     src/wl_event_loop.cpp
 
     src/protocols/wl/compositor.cpp
+    src/protocols/wl/shm.cpp
 
     src/protocols/xdg/wm_base.cpp
 )
@@ -31,17 +32,17 @@ set(OpenGL_GL_PREFERENCE "GLVND")
 find_package(Wayland COMPONENTS Client Server Cursor Egl REQUIRED)
 #find_package(UDev REQUIRED)
 #find_package(Libinput REQUIRED)
-find_package(OpenGL REQUIRED)
-find_package(EGL REQUIRED)
-find_package(XCB COMPONENTS XCB XKB COMPOSITE XFIXES RENDER SHAPE REQUIRED)
+#find_package(OpenGL REQUIRED)
+#find_package(EGL REQUIRED)
+find_package(XCB COMPONENTS XCB SHM XKB COMPOSITE XFIXES RENDER SHAPE REQUIRED)
 
 find_package(WaylandScanner REQUIRED)
 find_program(PKG_CONFIG pkg-config)
 
 #------------------------------------------------------------------------------
 
-pkg_check_modules(DBUS dbus-1)
-#pkg_check_modules(systemd libsystemd)
+#pkg_check_modules(DBUS dbus-1)
+pkg_check_modules(XCB_ERRORS xcb-errors)
 
 #------------------------------------------------------------------------------
 
@@ -98,6 +99,7 @@ set_target_properties(waylandx PROPERTIES
 target_include_directories(waylandx PRIVATE 
     "src"
     ${WAYLAND_PROTOCOL_GEN_DIR}
+    ${XCB_ERRORS_INCLUDE_DIRS}
     #${DBUS_INCLUDE_DIRS}
     #${systemd_INCLUDE_DIRS}
 )
@@ -105,6 +107,7 @@ target_include_directories(waylandx PRIVATE
 #------------------------------------------------------------------------------
 
 target_link_directories(waylandx PRIVATE 
+    ${XCB_ERRORS_LIBRARY_DIRS}
     #${DBUS_LIBRARY_DIRS}
     #${systemd_LIBRARY_DIRS}
 )
@@ -114,15 +117,16 @@ target_link_directories(waylandx PRIVATE
 target_link_libraries(waylandx PRIVATE
     Wayland::Server
     #X11::X11
-    OpenGL::GL
+    #OpenGL::GL
     #Libinput::Libinput
     #UDev::UDev
     #fmt::fmt
-    EGL::EGL
+    #EGL::EGL
     Wayland::Client
     XCB::XCB
     XCB::COMPOSITE
     XCB::XKB
+    XCB::SHM
     #spdlog::spdlog
     #sdbus-c++
     #ljh
@@ -132,11 +136,15 @@ target_link_libraries(waylandx PRIVATE
     #xkbcommon
     rt
 
+    ${XCB_ERRORS_LIBRARIES}
     #${DBUS_LIBRARIES}
-    #${systemd_LIBRARIES}
 )
 
 #------------------------------------------------------------------------------
+
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+set(CMAKE_INSTALL_RPATH "/usr/local/lib64")
 
 install(
     TARGETS waylandx

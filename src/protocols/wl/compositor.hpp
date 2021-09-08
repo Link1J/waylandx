@@ -1,5 +1,6 @@
 #pragma once
 #include <wl_protocol.hpp>
+#include <x_window.hpp>
 
 namespace protocol::wl
 {
@@ -9,7 +10,8 @@ namespace protocol::wl
         int                        version() const noexcept override;
         void*                      functions() const noexcept override;
 
-        void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept override;
+        void bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                  uint32_t id) noexcept override;
         void destory(struct wl_resource* resource) noexcept override;
 
         static void create_region(struct wl_client* client, struct wl_resource* resource, uint32_t id);
@@ -18,11 +20,14 @@ namespace protocol::wl
 
     struct surface : ::wl::resource
     {
+        x::window window{nullptr};
+
         const struct wl_interface* interface() const noexcept override;
         int                        version() const noexcept override;
         void*                      functions() const noexcept override;
 
-        void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept override;
+        void bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                  uint32_t id) noexcept override;
         void destory(struct wl_resource* resource) noexcept override;
 
         void create(struct wl_resource* resource, void* data) noexcept override;

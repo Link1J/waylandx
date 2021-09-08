@@ -6,6 +6,9 @@ Wayland may be the next great thing, but it lack features currently on X11. This
 
 ## Installation
 
+### Packages
+- xcb-utils-error [(repo)](https://gitlab.freedesktop.org/xorg/lib/libxcb-errors)
+
 `TO DO!`
 
 ## Usage

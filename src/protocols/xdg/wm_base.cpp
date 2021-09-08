@@ -23,7 +23,8 @@ void* ::protocol::xdg::wm_base::functions() const noexcept
     return &interface;
 }
 
-void ::protocol::xdg::wm_base::bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept
+void ::protocol::xdg::wm_base::bind(struct wl_resource* resource, struct wl_client* client, void* data,
+                                    uint32_t version, uint32_t id) noexcept
 {}
 
 void ::protocol::xdg::wm_base::destory(struct wl_resource* resource) noexcept
@@ -66,21 +67,24 @@ void* ::protocol::xdg::surface::functions() const noexcept
     return &interface;
 }
 
-void ::protocol::xdg::surface::bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept
+void ::protocol::xdg::surface::bind(struct wl_resource* resource, struct wl_client* client, void* data,
+                                    uint32_t version, uint32_t id) noexcept
 {}
 
 void ::protocol::xdg::surface::destory(struct wl_resource* resource) noexcept
 {}
 
 void ::protocol::xdg::surface::create(struct wl_resource* resource, void* data) noexcept
-{}
+{
+}
 
 void ::protocol::xdg::surface::destroy(struct wl_client* client, struct wl_resource* resource)
 {}
 
 void ::protocol::xdg::surface::get_toplevel(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 {
-    ::wl::connection::get().create_resource(new xdg::toplevel, client, wl_resource_get_version(resource), id, nullptr);
+    ::wl::connection::get().create_resource(new xdg::toplevel, client, wl_resource_get_version(resource), id,
+                                            wl_resource_get_user_data(resource));
 }
 
 void ::protocol::xdg::surface::get_popup(struct wl_client* client, struct wl_resource* resource, uint32_t id,
@@ -125,7 +129,8 @@ void* ::protocol::xdg::toplevel::functions() const noexcept
     return &interface;
 }
 
-void ::protocol::xdg::toplevel::bind(struct wl_client* client, void* data, uint32_t version, uint32_t id) noexcept
+void ::protocol::xdg::toplevel::bind(struct wl_resource* resource, struct wl_client* client, void* data,
+                                     uint32_t version, uint32_t id) noexcept
 {}
 
 void ::protocol::xdg::toplevel::destory(struct wl_resource* resource) noexcept

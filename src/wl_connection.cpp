@@ -9,7 +9,6 @@ wl::connection::connection()
     wl::event_loop::get().loop = wl_display_get_event_loop(display);
 
     wl_display_add_protocol_logger(display, protocol_logger, nullptr);
-    wl_display_init_shm(display);
 }
 
 wl::connection& wl::connection::get()
@@ -48,14 +47,15 @@ static struct wl_resource* bind(struct wl_client* client, void* data, uint32_t v
         return nullptr;
     }
     wl_resource_set_implementation(resource, protocol->functions(), data, &destory);
+    protocol->bind(resource, client, data, version, id);
     return resource;
 }
 
 static void destory(struct wl_resource* resource)
 {
-    auto protocol = (wl::protocol*)wl_resource_get_user_data(resource);
-    protocol->destory(resource);
-    wl_resource_destroy(resource);
+    //auto protocol = (wl::protocol*)wl_resource_get_user_data(resource);
+    //protocol->destory(resource);
+    //wl_resource_destroy(resource);
 }
 
 void wl::connection::run()
