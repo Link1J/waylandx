@@ -10,6 +10,7 @@ set(SOURCES
 
     src/protocols/wl/compositor.cpp
     src/protocols/wl/shm.cpp
+    src/protocols/wl/seat.cpp
 
     src/protocols/xdg/wm_base.cpp
 )
@@ -80,11 +81,7 @@ wayland_protocol_create(wlr-layer-shell ${CMAKE_SOURCE_DIR}/protocols/wlr-layer-
 
 #------------------------------------------------------------------------------
 
-add_executable   (waylandx                  ${SOURCES}       )
-add_custom_target(Wayland-Protocols DEPENDS ${SOURCE_WAYLAND})
-
-add_dependencies(waylandx         Wayland-Protocols)
-target_sources  (waylandx PRIVATE ${SOURCE_WAYLAND})
+add_executable(waylandx ${SOURCES} ${SOURCE_WAYLAND})
 
 #------------------------------------------------------------------------------
 
