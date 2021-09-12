@@ -96,20 +96,11 @@ void ::protocol::wl::surface::attach(struct wl_client* client, struct wl_resourc
 
     auto depth = surface->window.depth();
 
-    x::handle_cookie(xcb_shm_put_image_checked(connection, surface->window, surface->window.gc(), shm_buf->image->width,
-                                               shm_buf->image->height, 0, 0, shm_buf->image->width,
-                                               shm_buf->image->height, 0, 0, shm_buf->image->depth,
-                                               shm_buf->image->format, 0, shm_buf->shmseg, 0));
-
+    xcb_shm_put_image(connection, surface->window, surface->window.gc(), shm_buf->image->width, shm_buf->image->height,
+                      0, 0, shm_buf->image->width, shm_buf->image->height, 0, 0, shm_buf->image->depth,
+                      shm_buf->image->format, 0, shm_buf->shmseg, 0);
+    xcb_flush(connection);
     wl_buffer_send_release(buffer);
-
-    // x::handle_cookie(xcb_put_image(connection, XCB_IMAGE_FORMAT_Z_PIXMAP, surface->window, surface->window.gc(),
-    //                                shm_buf->width, shm_buf->height, x, y, 0, depth, shm_buf->pool->size,
-    //                                shm_buf->pool->data));
-
-    // x::handle_cookie(xcb_shm_put_image_checked(connection, surface->window, surface->window.gc(), shm_buf->width,
-    //                                           shm_buf->height, 0, 0, shm_buf->width, shm_buf->height, x, y, depth,
-    //                                           XCB_IMAGE_FORMAT_Z_PIXMAP, false, shm_buf->pool->shmseg, 0));
 }
 
 void ::protocol::wl::surface::damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
