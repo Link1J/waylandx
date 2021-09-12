@@ -3,6 +3,14 @@
 #include <x_connection.hpp>
 #include <wayland-server.h>
 #include <unistd.h>
+#include <sys/mman.h>
+#include <cstring>
+
+#if __ORDER_LITTLE_ENDIAN == __BYTE_ORDER__
+#define NATIVE_XCB_IMAGE_ORDER XCB_IMAGE_ORDER_LSB_FIRST
+#else
+#define NATIVE_XCB_IMAGE_ORDER XCB_IMAGE_ORDER_MSB_FIRST
+#endif
 
 struct shm_pool_create_data
 {
@@ -86,11 +94,16 @@ void ::protocol::wl::shm_pool::create(struct wl_resource* resource, void* data) 
 {
     auto  info       = (shm_pool_create_data*)data;
     auto& connection = x::connection::get();
-    shmseg           = xcb_generate_id(connection);
-    fd               = info->fd;
-    size             = info->size;
+    // shmseg           = xcb_generate_id(connection);
+    fd   = info->fd;
+    size = info->size;
 
-    x::print_error(xcb_request_check(connection, xcb_shm_attach_fd_checked(connection, shmseg, fd, false)));
+    // uint8_t(*test)[256000];
+    // this->data = (uint8_t*)mmap(nullptr, size, PROT_READ, MAP_SHARED, fd, 0);
+    // test       = (decltype(test))&this->data;
+    //(*test)[0] = 0;
+
+    // x::handle_cookie(xcb_shm_attach_fd_checked(connection, shmseg, fd, true));
 }
 
 void ::protocol::wl::shm_pool::create_buffer(struct wl_client* client, struct wl_resource* resource, uint32_t id,
@@ -134,21 +147,44 @@ void ::protocol::wl::buffer::bind(struct wl_resource* resource, struct wl_client
 void ::protocol::wl::buffer::destory(struct wl_resource* resource) noexcept
 {}
 
+static xcb_format_t const* query_xcb_format_for_depth(xcb_connection_t* const connection, unsigned depth)
+{
+    xcb_setup_t const* const setup = xcb_get_setup(connection);
+    xcb_format_iterator_t    it;
+    for (it = xcb_setup_pixmap_formats_iterator(setup); it.rem; xcb_format_next(&it))
+    {
+        xcb_format_t const* const format = it.data;
+        if (format->depth == depth)
+        {
+            return format;
+        }
+    }
+    return NULL;
+}
+
 void ::protocol::wl::buffer::create(struct wl_resource* resource, void* data) noexcept
 {
     auto  info       = (shm_buffer_create_data*)data;
     auto& connection = x::connection::get();
 
-    pool   = info->pool;
-    offset = info->offset;
-    width  = info->width;
-    height = info->height;
-    stride = info->stride;
-    format = info->format;
+    pool         = info->pool;
+    offset       = info->offset;
+    width        = info->width;
+    height       = info->height;
+    stride       = info->stride;
+    this->format = info->format;
+
+    xcb_format_t const* const format = query_xcb_format_for_depth(connection, 32);
+    image = xcb_image_create(width, height, XCB_IMAGE_FORMAT_Z_PIXMAP, format->scanline_pad, format->depth,
+                             format->bits_per_pixel, 0, NATIVE_XCB_IMAGE_ORDER, XCB_IMAGE_ORDER_MSB_FIRST, NULL, ~0, 0);
+
+    size_t const image_segment_size = image->stride * image->height;
+    image->data = (uint8_t*)mmap(NULL, image_segment_size, PROT_READ | PROT_WRITE, MAP_SHARED, pool->fd, 0);
+
+    shmseg = xcb_generate_id(connection);
+    x::handle_cookie(xcb_shm_attach_fd_checked(connection, shmseg, pool->fd, 0));
 
     WL_SHM_FORMAT_ABGR8888;
-
-    
 }
 
 void ::protocol::wl::buffer::destroy(struct wl_client* client, struct wl_resource* resource) noexcept

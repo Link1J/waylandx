@@ -4,6 +4,7 @@
 #include <wayland-server.h>
 #include <xcb/xcb.h>
 #include "shm.hpp"
+#include <cstring>
 
 const struct wl_interface* ::protocol::wl::compositor::interface() const noexcept
 {
@@ -32,7 +33,9 @@ void ::protocol::wl::compositor::destory(struct wl_resource* resource) noexcept
 {}
 
 void ::protocol::wl::compositor::create_region(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-{}
+{
+    ::wl::connection::get().create_resource(new wl::region, client, wl_resource_get_version(resource), id, nullptr);
+}
 
 void ::protocol::wl::compositor::create_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 {
@@ -75,7 +78,8 @@ void ::protocol::wl::surface::destory(struct wl_resource* resource) noexcept
 
 void ::protocol::wl::surface::create(struct wl_resource* resource, void* data) noexcept
 {
-    window = x::window();
+    auto& connection = x::connection::get();
+    window           = x::window();
 }
 
 void ::protocol::wl::surface::destroy(struct wl_client* client, struct wl_resource* resource)
@@ -88,11 +92,24 @@ void ::protocol::wl::surface::attach(struct wl_client* client, struct wl_resourc
     auto  surface    = (wl::surface*)wl_resource_get_user_data(resource);
     auto  shm_buf    = (wl::buffer*)wl_resource_get_user_data(buffer);
     surface->window.map();
+    surface->buffer = buffer;
 
-    auto cookie = xcb_shm_put_image_checked(
-        connection, surface->window, connection.gc(), shm_buf->width, shm_buf->height, 0, 0, shm_buf->width,
-        shm_buf->height, x, y, connection.screen()->root_depth, 1, false, shm_buf->pool->shmseg, shm_buf->offset);
-    x::print_error(xcb_request_check(connection, cookie));
+    auto depth = surface->window.depth();
+
+    x::handle_cookie(xcb_shm_put_image_checked(connection, surface->window, surface->window.gc(), shm_buf->image->width,
+                                               shm_buf->image->height, 0, 0, shm_buf->image->width,
+                                               shm_buf->image->height, 0, 0, shm_buf->image->depth,
+                                               shm_buf->image->format, 0, shm_buf->shmseg, 0));
+
+    wl_buffer_send_release(buffer);
+
+    // x::handle_cookie(xcb_put_image(connection, XCB_IMAGE_FORMAT_Z_PIXMAP, surface->window, surface->window.gc(),
+    //                                shm_buf->width, shm_buf->height, x, y, 0, depth, shm_buf->pool->size,
+    //                                shm_buf->pool->data));
+
+    // x::handle_cookie(xcb_shm_put_image_checked(connection, surface->window, surface->window.gc(), shm_buf->width,
+    //                                           shm_buf->height, 0, 0, shm_buf->width, shm_buf->height, x, y, depth,
+    //                                           XCB_IMAGE_FORMAT_Z_PIXMAP, false, shm_buf->pool->shmseg, 0));
 }
 
 void ::protocol::wl::surface::damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
@@ -122,4 +139,45 @@ void ::protocol::wl::surface::set_buffer_scale(struct wl_client* client, struct 
 
 void ::protocol::wl::surface::damage_buffer(struct wl_client* client, struct wl_resource* resource, int32_t x,
                                             int32_t y, int32_t width, int32_t height)
+{}
+
+const struct wl_interface* ::protocol::wl::region::interface() const noexcept
+{
+    return &wl_region_interface;
+}
+
+int ::protocol::wl::region::version() const noexcept
+{
+    return 4;
+}
+
+void* ::protocol::wl::region::functions() const noexcept
+{
+    static struct wl_region_interface interface = {
+        .destroy  = &::protocol::wl::region::destroy,
+        .add      = &::protocol::wl::region::add,
+        .subtract = &::protocol::wl::region::subtract,
+    };
+    return &interface;
+}
+
+void ::protocol::wl::region::bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                                  uint32_t id) noexcept
+{}
+
+void ::protocol::wl::region::destory(struct wl_resource* resource) noexcept
+{}
+
+void ::protocol::wl::region::create(struct wl_resource* resource, void* data) noexcept
+{}
+
+void ::protocol::wl::region::destroy(struct wl_client* client, struct wl_resource* resource)
+{}
+
+void ::protocol::wl::region::add(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
+                                 int32_t width, int32_t height)
+{}
+
+void ::protocol::wl::region::subtract(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
+                                      int32_t width, int32_t height)
 {}

@@ -1,6 +1,7 @@
 #pragma once
 #include <wl_protocol.hpp>
 #include <xcb/shm.h>
+#include <xcb/xcb_image.h>
 
 namespace protocol::wl
 {
@@ -23,6 +24,7 @@ namespace protocol::wl
         xcb_shm_seg_t shmseg;
         int           fd;
         unsigned int  size;
+        uint8_t*      data;
 
         const struct wl_interface* interface() const noexcept override;
         int                        version() const noexcept override;
@@ -42,6 +44,8 @@ namespace protocol::wl
 
     struct buffer : ::wl::resource
     {
+        xcb_shm_seg_t             shmseg;
+        xcb_image_t*              image;
         xcb_pixmap_t              pid;
         ::protocol::wl::shm_pool* pool;
         int32_t                   offset;

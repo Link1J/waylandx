@@ -21,6 +21,7 @@ namespace protocol::wl
     struct surface : ::wl::resource
     {
         x::window window{nullptr};
+        wl_resource* buffer;
 
         const struct wl_interface* interface() const noexcept override;
         int                        version() const noexcept override;
@@ -47,5 +48,24 @@ namespace protocol::wl
         static void set_buffer_scale(struct wl_client* client, struct wl_resource* resource, int32_t scale);
         static void damage_buffer(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
                                   int32_t width, int32_t height);
+    };
+
+    struct region : ::wl::resource
+    {
+        const struct wl_interface* interface() const noexcept override;
+        int                        version() const noexcept override;
+        void*                      functions() const noexcept override;
+
+        void bind(struct wl_resource* resource, struct wl_client* client, void* data, uint32_t version,
+                  uint32_t id) noexcept override;
+        void destory(struct wl_resource* resource) noexcept override;
+
+        void create(struct wl_resource* resource, void* data) noexcept override;
+
+        static void destroy(struct wl_client* client, struct wl_resource* resource);
+        static void add(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y, int32_t width,
+                        int32_t height);
+        static void subtract(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
+                             int32_t width, int32_t height);
     };
 } // namespace protocol::wl

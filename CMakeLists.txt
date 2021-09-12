@@ -13,6 +13,8 @@ set(SOURCES
     src/protocols/wl/seat.cpp
 
     src/protocols/xdg/wm_base.cpp
+
+    src/protocols/zwp/linux_dmabuf.cpp
 )
 
 #------------------------------------------------------------------------------
@@ -34,8 +36,9 @@ find_package(Wayland COMPONENTS Client Server Cursor Egl REQUIRED)
 #find_package(UDev REQUIRED)
 #find_package(Libinput REQUIRED)
 #find_package(OpenGL REQUIRED)
-#find_package(EGL REQUIRED)
-find_package(XCB COMPONENTS XCB SHM XKB COMPOSITE XFIXES RENDER SHAPE REQUIRED)
+find_package(EGL REQUIRED)
+find_package(XCB COMPONENTS XCB SHM XKB COMPOSITE XFIXES RENDER SHAPE IMAGE REQUIRED)
+find_package(Threads REQUIRED)
 
 find_package(WaylandScanner REQUIRED)
 find_program(PKG_CONFIG pkg-config)
@@ -91,6 +94,10 @@ set_target_properties(waylandx PROPERTIES
     CXX_EXTENSIONS NO
 )
 
+target_compile_options(waylandx PRIVATE
+    -fpermissive
+)
+
 #------------------------------------------------------------------------------
 
 target_include_directories(waylandx PRIVATE 
@@ -118,12 +125,14 @@ target_link_libraries(waylandx PRIVATE
     #Libinput::Libinput
     #UDev::UDev
     #fmt::fmt
-    #EGL::EGL
+    EGL::EGL
     Wayland::Client
     XCB::XCB
     XCB::COMPOSITE
     XCB::XKB
     XCB::SHM
+    XCB::IMAGE
+    Threads::Threads
     #spdlog::spdlog
     #sdbus-c++
     #ljh
