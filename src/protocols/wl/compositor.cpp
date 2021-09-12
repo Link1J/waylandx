@@ -1,10 +1,18 @@
 #include "compositor.hpp"
 #include <wl_connection.hpp>
 #include <x_connection.hpp>
+
 #include <wayland-server.h>
 #include <xcb/xcb.h>
-#include "shm.hpp"
+#include <sys/mman.h>
+
 #include <cstring>
+#include <thread>
+#include <chrono>
+
+#include "shm.hpp"
+
+using namespace std::literals;
 
 const struct wl_interface* ::protocol::wl::compositor::interface() const noexcept
 {
@@ -90,17 +98,12 @@ void ::protocol::wl::surface::attach(struct wl_client* client, struct wl_resourc
 {
     auto& connection = x::connection::get();
     auto  surface    = (wl::surface*)wl_resource_get_user_data(resource);
-    auto  shm_buf    = (wl::buffer*)wl_resource_get_user_data(buffer);
-    surface->window.map();
+    if (surface->buffer != nullptr)
+    {
+        wl_buffer_send_release(surface->buffer);
+        surface->buffer = nullptr;
+    }
     surface->buffer = buffer;
-
-    auto depth = surface->window.depth();
-
-    xcb_shm_put_image(connection, surface->window, surface->window.gc(), shm_buf->image->width, shm_buf->image->height,
-                      0, 0, shm_buf->image->width, shm_buf->image->height, 0, 0, shm_buf->image->depth,
-                      shm_buf->image->format, 0, shm_buf->shmseg, 0);
-    xcb_flush(connection);
-    wl_buffer_send_release(buffer);
 }
 
 void ::protocol::wl::surface::damage(struct wl_client* client, struct wl_resource* resource, int32_t x, int32_t y,
@@ -119,7 +122,28 @@ void ::protocol::wl::surface::set_input_region(struct wl_client* client, struct 
 {}
 
 void ::protocol::wl::surface::commit(struct wl_client* client, struct wl_resource* resource)
-{}
+{
+    auto surface = (wl::surface*)wl_resource_get_user_data(resource);
+
+    if (surface->buffer == nullptr)
+    {
+        return;
+    }
+
+    auto& connection = x::connection::get();
+    auto  shm_buf    = (wl::buffer*)wl_resource_get_user_data(surface->buffer);
+    surface->window.map();
+
+    msync(shm_buf->image->data, shm_buf->image->size, MS_SYNC);
+    std::this_thread::sleep_for(1s);
+
+    xcb_shm_put_image(connection, surface->window, surface->window.gc(), shm_buf->image->width, shm_buf->image->height,
+                      0, 0, shm_buf->image->width, shm_buf->image->height, 0, 0, shm_buf->image->depth,
+                      shm_buf->image->format, 0, shm_buf->shmseg, 0);
+    xcb_flush(connection);
+    wl_buffer_send_release(surface->buffer);
+    surface->buffer = nullptr;
+}
 
 void ::protocol::wl::surface::set_buffer_transform(struct wl_client* client, struct wl_resource* resource,
                                                    int32_t transform)

@@ -131,12 +131,12 @@ void* ::protocol::xdg::toplevel::functions() const noexcept
 void ::protocol::xdg::toplevel::bind(struct wl_resource* resource, struct wl_client* client, void* data,
                                      uint32_t version, uint32_t id) noexcept
 {
-    //wl_array* states = new wl_array();
-    //wl_array_init(states);
-    //wl_array_add(states, sizeof(xdg_toplevel_state));
-    //((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_ACTIVATED;
-    //xdg_toplevel_send_configure(resource, 320, 200, states);
-    //wl_array_release(states);
+    wl_array* states = new wl_array();
+    wl_array_init(states);
+    wl_array_add(states, sizeof(xdg_toplevel_state));
+    ((xdg_toplevel_state*)states->data)[0] = XDG_TOPLEVEL_STATE_ACTIVATED;
+    xdg_toplevel_send_configure(resource, 320, 200, states);
+    wl_array_release(states);
 }
 
 void ::protocol::xdg::toplevel::destory(struct wl_resource* resource) noexcept

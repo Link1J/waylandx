@@ -21,7 +21,7 @@ namespace protocol::wl
     struct surface : ::wl::resource
     {
         x::window window{nullptr};
-        wl_resource* buffer;
+        wl_resource* buffer = nullptr;
 
         const struct wl_interface* interface() const noexcept override;
         int                        version() const noexcept override;
